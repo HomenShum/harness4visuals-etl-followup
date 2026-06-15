@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-taste-etl-harness"
+version = "0.1.0"
+description = "Evaluation harness for transforming agent chat history into taste memory and SLM training JSONL."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Homen Shum" }]
+dependencies = []
+
+[project.scripts]
+taste-etl = "agent_taste_etl.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+

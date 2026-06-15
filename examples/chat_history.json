@@ -1,0 +1,41 @@
+{
+  "messages": [
+    {
+      "id": "turn_001",
+      "role": "user",
+      "timestamp": "2026-06-15T09:00:00-07:00",
+      "content": "I want the content to feel energetic, polished, and creator-led. Avoid purple gradients and generic stock footage."
+    },
+    {
+      "id": "turn_002",
+      "role": "assistant",
+      "timestamp": "2026-06-15T09:01:00-07:00",
+      "content": "I can remix the trend with a clean creator-led treatment and generate a few prompt options."
+    },
+    {
+      "id": "turn_003",
+      "role": "user",
+      "timestamp": "2026-06-15T09:03:00-07:00",
+      "content": "For my brand, keep captions concise and punchy. I like high-contrast product shots, real workflow screens, and witty founder voice."
+    },
+    {
+      "id": "turn_004",
+      "role": "user",
+      "timestamp": "2026-06-15T09:05:00-07:00",
+      "content": "This campaign can be more chaotic and meme-native, but that is only for the launch week."
+    },
+    {
+      "id": "turn_005",
+      "role": "assistant",
+      "timestamp": "2026-06-15T09:06:00-07:00",
+      "content": "The remix will preserve the durable brand voice while letting the launch creative move faster."
+    },
+    {
+      "id": "turn_006",
+      "role": "user",
+      "timestamp": "2026-06-15T09:08:00-07:00",
+      "content": "The second version is closer. More fast cuts, less corporate language, do not use fake testimonials."
+    }
+  ]
+}
+
