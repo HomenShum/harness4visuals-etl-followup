@@ -16,7 +16,7 @@ def run_pipeline(messages: list[ChatMessage]) -> PipelineResult:
     prompts = build_prompt_records(signals)
     training_examples = build_training_examples(messages, signals, prompts)
     manifest = {
-        "pipeline": "agent-taste-etl-harness",
+        "pipeline": "harness4visuals-etl-followup",
         "version": "0.1.0",
         "input_turns": len(messages),
         "signal_count": len(signals),
@@ -129,4 +129,3 @@ def _fingerprint(messages: list[ChatMessage], signals: list[PreferenceSignal]) -
 
 def _hash_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
-

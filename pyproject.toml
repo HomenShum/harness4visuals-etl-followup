@@ -3,9 +3,9 @@ requires = ["setuptools>=69"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "agent-taste-etl-harness"
+name = "harness4visuals-etl-followup"
 version = "0.1.0"
-description = "Evaluation harness for transforming agent chat history into taste memory and SLM training JSONL."
+description = "Harness4Visuals follow-up for transforming agent chat history into taste memory and SLM training JSONL."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
@@ -17,4 +17,3 @@ taste-etl = "agent_taste_etl.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-
