@@ -6,6 +6,96 @@ This repo is a focused follow-up to the original `Harness4Visuals` prototype. It
 
 The goal is not to demo another provider call. The goal is to make the learning layer testable. If this step works, future remixing, prompting, generation, posting, and analytics can improve over time. If this step is wrong, the agent learns noisy or invented preferences.
 
+## Visual Overview
+
+The repo focuses on the learning layer inside a longer creative-agent workflow. The critical question is whether every long image/video iteration can become faithful taste memory and clean training data.
+
+```mermaid
+flowchart LR
+  Chat["0. Chat history\nlong multi-turn creative session"]
+  Omni["Optional Omnigent events\nsession stream + approvals"]
+  Normalize["Normalize\nchat-history contract"]
+  Signals["Extract preference signals\npositive, negative, scoped"]
+  Profile["Taste profile\nretrieval-ready memory"]
+  Prompts["Prompt records\nmodel-targeted direction"]
+  Training["SLM JSONL\nPioneer/Fastino-ready"]
+  ClickHouse["ClickHouse\nOLAP memory + selection"]
+  Eval["Evaluator\nschema, provenance, F1, hallucination"]
+
+  Chat --> Normalize
+  Omni --> Normalize
+  Normalize --> Signals
+  Signals --> Profile
+  Signals --> Prompts
+  Signals --> Training
+  Signals --> ClickHouse
+  Prompts --> ClickHouse
+  Training --> ClickHouse
+  Training --> Eval
+  Signals --> Eval
+```
+
+### Long Creative Session
+
+Real image/video work is not a single prompt. It is a fire-wait-review loop where the user's strongest taste signals often appear after they compare generated options.
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant User
+  participant UI as Chat / Remix UI
+  participant Harness as Harnessed Agent
+  participant Providers as Gemini / Fal / Composio
+  participant DB as Runtime DB
+  participant ETL as Taste ETL
+  participant CH as ClickHouse
+  participant SFT as Pioneer / Fastino
+
+  User->>UI: Brief, references, constraints
+  UI->>Harness: Append multimodal turn
+  Harness->>DB: creative_session, harness_events, assets
+  Harness->>Providers: Analyze references and trends with Gemini
+  Providers-->>Harness: Structured analysis result
+  Harness->>DB: provider_job + research event
+
+  loop Prompt, generate, review, revise
+    Harness->>Providers: Submit image/video generation to Fal
+    Providers-->>Harness: Generated asset or async job result
+    Harness->>DB: provider_job, asset, generation event
+    Harness-->>UI: Display variants for review
+    User->>UI: Select, reject, critique, revise
+    UI->>DB: asset_review + user review event
+  end
+
+  Harness-->>UI: Request posting approval
+  User-->>Harness: Approve final asset and caption
+  Harness->>Providers: Publish through Composio Instagram MCP
+  Providers-->>DB: post_record and analytics snapshot
+  DB->>ETL: Replay traceable event history
+  ETL->>CH: JSONEachRow analytical memory rows
+  ETL->>SFT: Decoder SFT JSONL training examples
+```
+
+### Omnigent Abstraction Path
+
+Omnigent can absorb repeated harness mechanics such as sessions, sub-agents, policies, and event streaming. Harness4Visuals still keeps the creative memory contract app-owned.
+
+```mermaid
+flowchart TD
+  AgentYaml["Omnigent agent YAML\nsupervisor + tools + policies"]
+  Events["Omnigent session events\nmessages, tool outputs, approvals"]
+  Adapter["src/agent_taste_etl/omnigent.py\nnormalize-omnigent"]
+  Contract["chat_history.json\nsame ETL input contract"]
+  Pipeline["run_pipeline()"]
+  Outputs["signals.jsonl\nprompts.jsonl\ntraining.jsonl"]
+
+  AgentYaml --> Events
+  Events --> Adapter
+  Adapter --> Contract
+  Contract --> Pipeline
+  Pipeline --> Outputs
+```
+
 ## What It Ships
 
 - A deterministic ETL pipeline for chat history.
@@ -55,6 +145,17 @@ python -m agent_taste_etl.cli normalize-omnigent \
   --input examples/omnigent_session_events.json \
   --out out/omnigent/chat_history.json
 ```
+
+## Output Map
+
+| Command | Reads | Writes | Purpose |
+| --- | --- | --- | --- |
+| `run` | `chat_history.json` | `signals.jsonl`, `taste_profile.json`, `prompts.jsonl`, `training.jsonl`, `manifest.json` | Produces the core memory and training artifacts. |
+| `evaluate` | `signals.jsonl`, `golden_signals.jsonl` | metrics JSON on stdout | Scores schema validity, provenance, precision, recall, F1, and hallucination rate. |
+| `verify` | fixture input and golden signals | full run output plus metrics | Runs the CI-grade proof loop. |
+| `export-clickhouse` | `chat_history.json` | ClickHouse JSONEachRow files | Loads analytical memory, prompt, and training rows. |
+| `export-pioneer` | `chat_history.json` | decoder SFT JSONL and training-job request | Prepares Pioneer/Fastino fine-tuning artifacts. |
+| `normalize-omnigent` | Omnigent session events | `chat_history.json` | Converts generic harness events into the stable ETL input shape. |
 
 ## Harness Contract
 
