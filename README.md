@@ -75,6 +75,7 @@ The ETL step must produce records that are:
 
 ## Integration Guides
 
+- [Full Harness4Visuals guide](docs/full-guide.md): harness manager, frontend shape, backend requests, provider adapters, runtime schema, and end-to-end workflow.
 - [ClickHouse integration](docs/integrations/clickhouse.md): analytical memory schema, JSONEachRow exports, loading commands, and query patterns.
 - [Pioneer / Fastino integration](docs/integrations/pioneer-fastino.md): decoder SFT JSONL, dataset upload flow, training job request, and evaluation loop.
 - [Training targets and alternatives](docs/integrations/training-targets.md): Hugging Face TRL, Together AI, and OpenAI-compatible fine-tuning guidance.
