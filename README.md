@@ -40,6 +40,18 @@ python -m agent_taste_etl.cli evaluate \
   --golden examples/golden_signals.jsonl
 ```
 
+Export provider-ready integration artifacts:
+
+```bash
+python -m agent_taste_etl.cli export-clickhouse \
+  --input examples/long_multiturn_chat_history.json \
+  --out out/clickhouse
+
+python -m agent_taste_etl.cli export-pioneer \
+  --input examples/long_multiturn_chat_history.json \
+  --out out/pioneer
+```
+
 ## Harness Contract
 
 The ETL step must produce records that are:
@@ -60,6 +72,12 @@ The ETL step must produce records that are:
 - `prompts.jsonl`: generation prompt records.
 - `training.jsonl`: SLM fine-tuning examples.
 - `manifest.json`: deterministic run metadata.
+
+## Integration Guides
+
+- [ClickHouse integration](docs/integrations/clickhouse.md): analytical memory schema, JSONEachRow exports, loading commands, and query patterns.
+- [Pioneer / Fastino integration](docs/integrations/pioneer-fastino.md): decoder SFT JSONL, dataset upload flow, training job request, and evaluation loop.
+- [Training targets and alternatives](docs/integrations/training-targets.md): Hugging Face TRL, Together AI, and OpenAI-compatible fine-tuning guidance.
 
 ## Step Output Shapes
 

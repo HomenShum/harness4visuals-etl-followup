@@ -33,7 +33,19 @@ class PipelineTest(unittest.TestCase):
             profile = json.loads((out_dir / "taste_profile.json").read_text(encoding="utf-8"))
             self.assertTrue(profile["durable"])
 
+    def test_prompt_separates_durable_taste_from_temporary_guidance(self) -> None:
+        messages = load_chat_history(Path("examples/long_multiturn_chat_history.json"))
+        result = run_pipeline(messages)
+        prompt = result.prompts[0].prompt
+
+        self.assertIn("Preserve durable taste:", prompt)
+        self.assertIn("Apply session or campaign guidance only for the current asset:", prompt)
+        self.assertIn("polished", prompt)
+        durable_section, temporary_section = prompt.split("Apply session or campaign guidance only for the current asset:")
+        self.assertIn("polished", durable_section)
+        self.assertNotIn("meme-native", durable_section)
+        self.assertIn("meme-native", temporary_section)
+
 
 if __name__ == "__main__":
     unittest.main()
-

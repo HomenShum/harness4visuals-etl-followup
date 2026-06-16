@@ -57,11 +57,21 @@ def build_taste_profile(signals: list[PreferenceSignal]) -> dict[str, Any]:
 def build_prompt_records(signals: list[PreferenceSignal]) -> list[PromptRecord]:
     if not signals:
         return []
-    positives = [signal.subject for signal in signals if signal.polarity == "positive"]
+    durable_positives = [
+        signal.subject
+        for signal in signals
+        if signal.polarity == "positive" and signal.scope == "durable"
+    ]
+    temporary_positives = [
+        signal.subject
+        for signal in signals
+        if signal.polarity == "positive" and signal.scope != "durable"
+    ]
     negatives = [signal.subject for signal in signals if signal.polarity == "negative"]
     prompt = (
         "Generate a social content concept that reflects the user's durable taste. "
-        f"Lean into: {_join_for_prompt(positives)}. "
+        f"Preserve durable taste: {_join_for_prompt(durable_positives)}. "
+        f"Apply session or campaign guidance only for the current asset: {_join_for_prompt(temporary_positives)}. "
         f"Avoid: {_join_for_prompt(negatives)}. "
         "Return a concise, model-ready prompt with visual direction, voice, and constraints."
     )
