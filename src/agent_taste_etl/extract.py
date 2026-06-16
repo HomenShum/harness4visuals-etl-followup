@@ -10,11 +10,13 @@ _NEGATIVE_PATTERNS = [
     re.compile(r"\bavoid\s+(.+)", re.IGNORECASE),
     re.compile(r"\bdo not use\s+(.+)", re.IGNORECASE),
     re.compile(r"\bdon't use\s+(.+)", re.IGNORECASE),
-    re.compile(r"\bless\s+([^,.]+)", re.IGNORECASE),
+    re.compile(r"\bless\s+(.+?)(?=\s+and\s+(?:a|an|the)\s+|$|[,.])", re.IGNORECASE),
+    re.compile(r"\bremove\s+(.+)", re.IGNORECASE),
     re.compile(r"\bdislike\s+(.+)", re.IGNORECASE),
 ]
 
 _POSITIVE_PATTERNS = [
+    re.compile(r"\bmy durable taste is still\s+(.+)", re.IGNORECASE),
     re.compile(r"\bi like\s+(.+)", re.IGNORECASE),
     re.compile(r"\bi love\s+(.+)", re.IGNORECASE),
     re.compile(r"\bprefer\s+(.+)", re.IGNORECASE),
@@ -107,7 +109,7 @@ def _infer_scope(evidence: str, polarity: str) -> str:
     lowered = evidence.lower()
     if any(token in lowered for token in ["campaign", "launch week", "only for"]):
         return "campaign"
-    if any(token in lowered for token in ["my brand", "my taste", "i like", "i love", "prefer", "i want"]):
+    if any(token in lowered for token in ["my brand", "my taste", "durable taste", "i like", "i love", "prefer", "i want"]):
         return "durable"
     if any(token in lowered for token in ["this version", "second version", "more ", "less "]):
         return "session"
@@ -133,4 +135,3 @@ def _stable_id(kind: str, subject: str, polarity: str, scope: str, source_ids: l
 
 def _dedupe_key(signal: PreferenceSignal) -> str:
     return "|".join([signal.kind, signal.subject, signal.polarity, signal.scope])
-

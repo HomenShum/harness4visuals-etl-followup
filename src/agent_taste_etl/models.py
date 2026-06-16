@@ -13,6 +13,8 @@ class ChatMessage:
     role: str
     content: str
     timestamp: str | None = None
+    content_blocks: list[dict[str, Any]] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -60,4 +62,3 @@ class PipelineResult:
     prompts: list[PromptRecord]
     training_examples: list[TrainingExample]
     manifest: dict[str, Any]
-

@@ -1,0 +1,278 @@
+{
+  "conversation_id": "conv_h4v_launch_video_001",
+  "objective": "Create a launch image carousel and short social video that matches the user's taste.",
+  "created_at": "2026-06-15T09:00:00-07:00",
+  "channels": ["instagram_reel", "instagram_carousel"],
+  "messages": [
+    {
+      "id": "turn_001",
+      "role": "user",
+      "phase": "brief",
+      "timestamp": "2026-06-15T09:00:00-07:00",
+      "content": [
+        {
+          "type": "text",
+          "text": "I need a launch image and 8-second video for our agent workflow demo. I want it to feel premium, kinetic, and founder-led. Avoid corporate explainer voice and AI-glossy faces."
+        },
+        {
+          "type": "image_reference",
+          "asset_id": "ref_mood_001",
+          "uri": "asset://uploads/moodboard.png",
+          "label": "moodboard",
+          "notes": "High contrast, handheld camera energy, real workflow screens."
+        }
+      ],
+      "metadata": {
+        "surface": "chat",
+        "user_intent": "creative_brief"
+      }
+    },
+    {
+      "id": "turn_002",
+      "role": "assistant",
+      "phase": "clarify",
+      "timestamp": "2026-06-15T09:01:00-07:00",
+      "content": "I will separate durable taste from launch-only direction and keep generated assets attached to the turns that produced them."
+    },
+    {
+      "id": "turn_003",
+      "role": "user",
+      "phase": "reference_upload",
+      "timestamp": "2026-06-15T09:03:00-07:00",
+      "content": [
+        {
+          "type": "text",
+          "text": "Use these as references, but do not copy them. I like cinematic product closeups, bold captions, and quick cuts that still feel controlled."
+        },
+        {
+          "type": "video_reference",
+          "asset_id": "ref_competitor_002",
+          "uri": "asset://uploads/competitor_reel.mp4",
+          "label": "competitor reel",
+          "notes": "Good pacing, too much hype language."
+        }
+      ]
+    },
+    {
+      "id": "turn_004",
+      "role": "assistant",
+      "phase": "research",
+      "timestamp": "2026-06-15T09:04:00-07:00",
+      "content": [
+        {
+          "type": "text",
+          "text": "I am going to analyze the references and extract visual patterns before drafting prompts."
+        }
+      ],
+      "tool_calls": [
+        {
+          "id": "call_trend_scan_001",
+          "name": "gemini_analyze_social_reference",
+          "status": "completed",
+          "input": {
+            "asset_ids": ["ref_mood_001", "ref_competitor_002"],
+            "questions": ["What makes this feel current?", "What should we avoid copying?"]
+          }
+        }
+      ]
+    },
+    {
+      "id": "turn_005",
+      "role": "tool",
+      "phase": "research",
+      "name": "gemini_analyze_social_reference",
+      "tool_call_id": "call_trend_scan_001",
+      "timestamp": "2026-06-15T09:05:00-07:00",
+      "content": [
+        {
+          "type": "analysis",
+          "text": "References use fast hook framing, product-in-context shots, text overlays, and founder POV. Avoid generic SaaS b-roll and over-explaining."
+        }
+      ]
+    },
+    {
+      "id": "turn_006",
+      "role": "assistant",
+      "phase": "prompt_draft",
+      "timestamp": "2026-06-15T09:06:00-07:00",
+      "content": "Draft A leans cinematic and premium. Draft B leans punchier and trend-native. Draft C focuses on founder POV."
+    },
+    {
+      "id": "turn_007",
+      "role": "user",
+      "phase": "prompt_feedback",
+      "timestamp": "2026-06-15T09:08:00-07:00",
+      "content": "B is closer, but keep the premium lighting from A. More fast cuts, less corporate language, and avoid fake testimonials."
+    },
+    {
+      "id": "turn_008",
+      "role": "assistant",
+      "phase": "prompt_revision",
+      "timestamp": "2026-06-15T09:09:00-07:00",
+      "content": "I will combine B's pacing with A's lighting and remove testimonial framing."
+    },
+    {
+      "id": "turn_009",
+      "role": "assistant",
+      "phase": "generation",
+      "timestamp": "2026-06-15T09:10:00-07:00",
+      "content": "Starting image and video generations. This may take a few minutes.",
+      "tool_calls": [
+        {
+          "id": "call_fal_image_001",
+          "name": "fal_image_generate",
+          "status": "queued",
+          "input": {
+            "prompt_version": "prompt_v002",
+            "aspect_ratio": "4:5",
+            "variants": 3
+          }
+        },
+        {
+          "id": "call_fal_video_001",
+          "name": "fal_video_generate",
+          "status": "queued",
+          "input": {
+            "prompt_version": "prompt_v002",
+            "duration_seconds": 8,
+            "aspect_ratio": "9:16",
+            "variants": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "turn_010",
+      "role": "tool",
+      "phase": "generation",
+      "name": "fal_image_generate",
+      "tool_call_id": "call_fal_image_001",
+      "timestamp": "2026-06-15T09:12:00-07:00",
+      "content": [
+        {
+          "type": "generated_asset",
+          "asset_id": "gen_image_001",
+          "modality": "image",
+          "uri": "asset://generated/fal/gen_image_001.png",
+          "model": "fal/image-provider",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "turn_011",
+      "role": "tool",
+      "phase": "generation",
+      "name": "fal_video_generate",
+      "tool_call_id": "call_fal_video_001",
+      "timestamp": "2026-06-15T09:14:00-07:00",
+      "content": [
+        {
+          "type": "generated_asset",
+          "asset_id": "gen_video_001",
+          "modality": "video",
+          "uri": "asset://generated/fal/gen_video_001.mp4",
+          "model": "fal/video-provider",
+          "duration_seconds": 8,
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "turn_012",
+      "role": "assistant",
+      "phase": "review_surface",
+      "timestamp": "2026-06-15T09:15:00-07:00",
+      "content": "I have one image direction and one video direction ready for review."
+    },
+    {
+      "id": "turn_013",
+      "role": "user",
+      "phase": "review",
+      "timestamp": "2026-06-15T09:17:00-07:00",
+      "content": [
+        {
+          "type": "text",
+          "text": "The image is strong. Keep real workflow screens and high-contrast product shots. The video needs less synthetic skin texture and a sharper first second."
+        },
+        {
+          "type": "selection",
+          "selected_asset_ids": ["gen_image_001"],
+          "rejected_asset_ids": ["gen_video_001"],
+          "reason": "Image matches the brand. Video pacing is close, but the human shot feels too synthetic."
+        }
+      ]
+    },
+    {
+      "id": "turn_014",
+      "role": "assistant",
+      "phase": "revision_plan",
+      "timestamp": "2026-06-15T09:18:00-07:00",
+      "content": "I will preserve the image direction, revise the video hook, and remove synthetic human texture."
+    },
+    {
+      "id": "turn_015",
+      "role": "user",
+      "phase": "constraint_update",
+      "timestamp": "2026-06-15T09:19:00-07:00",
+      "content": "For this campaign only, make the edit slightly more chaotic and meme-native. My durable taste is still polished, high-contrast, and useful."
+    },
+    {
+      "id": "turn_016",
+      "role": "assistant",
+      "phase": "generation",
+      "timestamp": "2026-06-15T09:20:00-07:00",
+      "content": "Regenerating the video with the campaign-only chaos constraint and durable polished taste.",
+      "tool_calls": [
+        {
+          "id": "call_fal_video_002",
+          "name": "fal_video_generate",
+          "status": "queued",
+          "input": {
+            "prompt_version": "prompt_v003",
+            "duration_seconds": 8,
+            "aspect_ratio": "9:16",
+            "variants": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "turn_017",
+      "role": "tool",
+      "phase": "generation",
+      "name": "fal_video_generate",
+      "tool_call_id": "call_fal_video_002",
+      "timestamp": "2026-06-15T09:24:00-07:00",
+      "content": [
+        {
+          "type": "generated_asset",
+          "asset_id": "gen_video_002",
+          "modality": "video",
+          "uri": "asset://generated/fal/gen_video_002.mp4",
+          "model": "fal/video-provider",
+          "duration_seconds": 8,
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "turn_018",
+      "role": "user",
+      "phase": "approval",
+      "timestamp": "2026-06-15T09:27:00-07:00",
+      "content": [
+        {
+          "type": "text",
+          "text": "This is the right direction. Keep the fast cuts and witty founder voice. Do not store the meme chaos as my normal brand preference."
+        },
+        {
+          "type": "selection",
+          "selected_asset_ids": ["gen_video_002", "gen_image_001"],
+          "reason": "Both assets are approved for the launch post."
+        }
+      ]
+    }
+  ]
+}
+

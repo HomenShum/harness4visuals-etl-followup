@@ -67,7 +67,139 @@ The harness is intentionally explicit about every intermediate shape. Each snipp
 
 ### 0. Chat History Input
 
-Input is a JSON object with ordered chat messages. This is the replay source for the whole pipeline.
+Input should model a real creative session, not just a short user/assistant exchange. Image and video work usually moves through briefing, reference gathering, research, prompt drafts, async generation, review, revision, selection, and approval. The transcript needs to preserve that whole event trail.
+
+Research basis:
+
+- OpenAI's Responses API supports text and image inputs, stateful interactions, function calling, and built-in tools, which implies the history should preserve prior outputs and tool events, not only final chat text: [OpenAI Responses overview](https://developers.openai.com/api/reference/responses/overview/).
+- Anthropic's vision docs describe image content blocks, URL/file references, and warn that resending base64 images in long multi-turn histories increases payload size and latency, so durable `asset_id` or file references are better for long sessions: [Claude vision docs](https://platform.claude.com/docs/en/build-with-claude/vision).
+- Gemini's API reference calls out an Interactions API optimized for agentic workflows, server-side state, and complex multimodal multi-turn conversations, plus media generation endpoints for Imagen and Veo: [Gemini API reference](https://ai.google.dev/api).
+- Tool-based agent loops need structured tool calls and tool results so the harness can replay what happened: [Claude tool use docs](https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview).
+
+The compact fixture at `examples/chat_history.json` is for unit tests. A more realistic long-session shape is in `examples/long_multiturn_chat_history.json`.
+
+Top-level shape:
+
+```json
+{
+  "conversation_id": "conv_h4v_launch_video_001",
+  "objective": "Create a launch image carousel and short social video that matches the user's taste.",
+  "created_at": "2026-06-15T09:00:00-07:00",
+  "channels": ["instagram_reel", "instagram_carousel"],
+  "messages": []
+}
+```
+
+Each message is an event. `content` can stay a string for simple turns, or become typed content blocks when the turn contains references, selections, generated media, or tool artifacts.
+
+```json
+{
+  "id": "turn_001",
+  "role": "user",
+  "phase": "brief",
+  "timestamp": "2026-06-15T09:00:00-07:00",
+  "content": [
+    {
+      "type": "text",
+      "text": "I need a launch image and 8-second video. I want it to feel premium, kinetic, and founder-led. Avoid corporate explainer voice and AI-glossy faces."
+    },
+    {
+      "type": "image_reference",
+      "asset_id": "ref_mood_001",
+      "uri": "asset://uploads/moodboard.png",
+      "label": "moodboard",
+      "notes": "High contrast, handheld camera energy, real workflow screens."
+    }
+  ],
+  "metadata": {
+    "surface": "chat",
+    "user_intent": "creative_brief"
+  }
+}
+```
+
+Tool calls and tool results should be first-class events, because a real harness needs to replay provider behavior and long waits.
+
+```json
+{
+  "id": "turn_006",
+  "role": "assistant",
+  "phase": "research",
+  "content": [
+    {
+      "type": "text",
+      "text": "I am going to analyze the references and extract reusable visual patterns before drafting prompts."
+    }
+  ],
+  "tool_calls": [
+    {
+      "id": "call_trend_scan_001",
+      "name": "gemini_analyze_social_reference",
+      "status": "completed",
+      "input": {
+        "asset_ids": ["ref_mood_001", "ref_competitor_002"],
+        "questions": ["What makes this feel current?", "What should we avoid copying?"]
+      }
+    }
+  ]
+}
+```
+
+Generated assets should be referenced by ID and URI, then reviewed in later user turns. Do not flatten them into one final prompt; preserve the revision trail.
+
+```json
+{
+  "id": "turn_014",
+  "role": "tool",
+  "phase": "generation",
+  "name": "fal_video_generate",
+  "tool_call_id": "call_fal_video_001",
+  "content": [
+    {
+      "type": "generated_asset",
+      "asset_id": "gen_video_001",
+      "modality": "video",
+      "uri": "asset://generated/fal/gen_video_001.mp4",
+      "model": "fal/veo-style-provider",
+      "duration_seconds": 8,
+      "status": "completed"
+    }
+  ]
+}
+```
+
+User review turns are where the highest-value taste signals usually appear. The input shape should capture selection, comparison, negative feedback, and transient campaign constraints.
+
+```json
+{
+  "id": "turn_015",
+  "role": "user",
+  "phase": "review",
+  "content": [
+    {
+      "type": "text",
+      "text": "Version B is closest. Keep the real workflow screens and fast cuts. Make it less corporate, avoid fake testimonials, and remove the glossy AI skin texture."
+    },
+    {
+      "type": "selection",
+      "selected_asset_ids": ["gen_video_001"],
+      "rejected_asset_ids": ["gen_video_002"],
+      "reason": "B has the right pacing, but the human shots still feel synthetic."
+    }
+  ]
+}
+```
+
+A long conversation can contain dozens of turns. The ETL harness should keep enough structure to answer:
+
+- What did the user ask for first?
+- Which references and generated assets influenced the decision?
+- Which tool calls produced which outputs?
+- Which preferences are durable taste versus one-off campaign direction?
+- What did the user approve, reject, or ask to revise?
+- Which final prompt or training record came from which evidence?
+
+Minimal valid text-only input still works:
 
 ```json
 {
