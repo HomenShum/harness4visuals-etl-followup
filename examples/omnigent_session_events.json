@@ -1,0 +1,71 @@
+{
+  "session_id": "conv_omnigent_h4v_001",
+  "objective": "Create an Instagram reel through an Omnigent-managed agent session.",
+  "created_at": "2026-06-15T09:00:00-07:00",
+  "events": [
+    {
+      "id": "item_001",
+      "type": "message",
+      "role": "user",
+      "phase": "brief",
+      "created_at": "2026-06-15T09:00:00-07:00",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "My durable taste is still premium, kinetic, and founder-led. Avoid corporate explainer voice and generic stock footage."
+        }
+      ]
+    },
+    {
+      "id": "evt_002",
+      "type": "function_call_output",
+      "name": "gemini_analyze_social_reference",
+      "created_at": "2026-06-15T09:04:00-07:00",
+      "output": {
+        "trend_patterns": ["fast cuts", "real workflow screens"],
+        "risks": ["copying competitor layout"]
+      }
+    },
+    {
+      "id": "item_003",
+      "type": "message",
+      "role": "user",
+      "phase": "review",
+      "created_at": "2026-06-15T09:42:00-07:00",
+      "content": [
+        {
+          "type": "text",
+          "text": "Version B is closest. Keep real workflow screens and fast cuts. Remove synthetic skin texture and make this version less corporate."
+        },
+        {
+          "type": "selection",
+          "selected_asset_ids": ["gen_video_002"],
+          "rejected_asset_ids": ["gen_video_001"],
+          "reason": "B has stronger pacing, but the human shot still looks synthetic."
+        }
+      ]
+    },
+    {
+      "id": "evt_004",
+      "type": "response.elicitation_request",
+      "sequence_number": 14,
+      "params": {
+        "mode": "form",
+        "message": "Approve posting gen_video_002 to Instagram?",
+        "phase": "pre_tool_use",
+        "policy_name": "instagram_publish_approval",
+        "content_preview": "caption='Behind the build...' asset_id='gen_video_002'"
+      }
+    },
+    {
+      "id": "evt_005",
+      "type": "function_call_output",
+      "name": "composio_instagram_publish",
+      "created_at": "2026-06-15T09:50:00-07:00",
+      "output": {
+        "instagram_media_id": "17890000000000000",
+        "permalink": "https://instagram.com/p/example"
+      }
+    }
+  ]
+}

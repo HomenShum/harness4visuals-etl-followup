@@ -9,6 +9,7 @@ from .etl import run_pipeline, write_result
 from .evaluate import assert_thresholds, evaluate_files
 from .integrations import DEFAULT_PIONEER_BASE_MODEL, build_clickhouse_rows, write_clickhouse_export, write_pioneer_export
 from .io import load_chat_history
+from .omnigent import load_omnigent_chat_history, write_omnigent_chat_history
 
 DEFAULT_INPUT = Path("examples/chat_history.json")
 DEFAULT_GOLDEN = Path("examples/golden_signals.jsonl")
@@ -46,6 +47,10 @@ def main(argv: list[str] | None = None) -> int:
     pioneer_parser.add_argument("--dataset-name", default="harness4visuals_preference_sft")
     pioneer_parser.add_argument("--model-name", default="harness4visuals-preference-prompt-adapter")
     pioneer_parser.add_argument("--base-model", default=DEFAULT_PIONEER_BASE_MODEL)
+
+    omnigent_parser = subparsers.add_parser("normalize-omnigent", help="Convert Omnigent session events into ETL chat history.")
+    omnigent_parser.add_argument("--input", type=Path, required=True)
+    omnigent_parser.add_argument("--out", type=Path, default=Path("out/omnigent/chat_history.json"))
 
     args = parser.parse_args(argv)
     if args.command == "run":
@@ -102,6 +107,21 @@ def main(argv: list[str] | None = None) -> int:
                     "model_name": args.model_name,
                     "base_model": args.base_model,
                     "run_fingerprint": pipeline_result.manifest["run_fingerprint"],
+                },
+                indent=2,
+                sort_keys=True,
+            )
+        )
+        return 0
+    if args.command == "normalize-omnigent":
+        chat_history = load_omnigent_chat_history(args.input)
+        write_omnigent_chat_history(chat_history, args.out)
+        print(
+            json.dumps(
+                {
+                    "out": str(args.out),
+                    "conversation_id": chat_history["conversation_id"],
+                    "message_count": len(chat_history["messages"]),
                 },
                 indent=2,
                 sort_keys=True,

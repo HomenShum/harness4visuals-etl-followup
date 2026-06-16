@@ -50,6 +50,10 @@ python -m agent_taste_etl.cli export-clickhouse \
 python -m agent_taste_etl.cli export-pioneer \
   --input examples/long_multiturn_chat_history.json \
   --out out/pioneer
+
+python -m agent_taste_etl.cli normalize-omnigent \
+  --input examples/omnigent_session_events.json \
+  --out out/omnigent/chat_history.json
 ```
 
 ## Harness Contract
@@ -76,6 +80,7 @@ The ETL step must produce records that are:
 ## Integration Guides
 
 - [Full Harness4Visuals guide](docs/full-guide.md): harness manager, frontend shape, backend requests, provider adapters, runtime schema, and end-to-end workflow.
+- [Omnigent harness abstraction](docs/integrations/omnigent.md): side-by-side custom harness versus Omnigent code shape, expected code reduction, and ETL adapter path.
 - [ClickHouse integration](docs/integrations/clickhouse.md): analytical memory schema, JSONEachRow exports, loading commands, and query patterns.
 - [Pioneer / Fastino integration](docs/integrations/pioneer-fastino.md): decoder SFT JSONL, dataset upload flow, training job request, and evaluation loop.
 - [Training targets and alternatives](docs/integrations/training-targets.md): Hugging Face TRL, Together AI, and OpenAI-compatible fine-tuning guidance.
@@ -232,6 +237,16 @@ Minimal valid text-only input still works:
   ]
 }
 ```
+
+Omnigent-managed sessions can be normalized into the same shape with:
+
+```bash
+python -m agent_taste_etl.cli normalize-omnigent \
+  --input examples/omnigent_session_events.json \
+  --out out/omnigent/chat_history.json
+```
+
+The adapter preserves Omnigent message, function-call output, and approval events as chat-history messages before the ETL pipeline extracts taste and training rows.
 
 ### 1. Normalized Chat Messages
 

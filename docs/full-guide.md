@@ -19,6 +19,7 @@ Use these provider docs as the source of truth when implementing real adapters:
 - Fal: [Fal client setup](https://fal.ai/docs/documentation/model-apis/inference/client-setup), [Fal queue API](https://fal.ai/docs/documentation/model-apis/inference/queue), [Fal JS client](https://fal.ai/docs/api-reference/client-libraries/javascript), and [Veo 3.1 model docs](https://fal.ai/models/fal-ai/veo3.1/api)
 - Composio Instagram MCP: [Instagram toolkit](https://composio.dev/toolkits/instagram) and [Instagram MCP integration guide](https://composio.dev/toolkits/instagram/framework/autogen)
 - OpenUI: [OpenUI introduction](https://www.openui.com/docs/openui-lang), [OpenUI dashboard architecture](https://www.openui.com/docs/openui-lang/examples/dashboard), and [LangChain OpenUI integration](https://docs.langchain.com/oss/python/langchain/frontend/integrations/openui)
+- Omnigent: [Omnigent README](https://github.com/omnigent-ai/omnigent), [Agent YAML spec](https://github.com/omnigent-ai/omnigent/blob/main/docs/AGENT_YAML_SPEC.md), [Policies](https://github.com/omnigent-ai/omnigent/blob/main/docs/POLICIES.md), and [deploy/execution model](https://github.com/omnigent-ai/omnigent/blob/main/deploy/README.md)
 - ClickHouse: [ClickHouse integration guide](./integrations/clickhouse.md)
 - Pioneer/Fastino: [Pioneer/Fastino integration guide](./integrations/pioneer-fastino.md)
 
@@ -55,6 +56,104 @@ flowchart LR
   RuntimeDB --> Pioneer
   ClickHouse --> OpenUI
 ```
+
+## Omnigent Abstraction Option
+
+Omnigent can sit above the Harness4Visuals provider tools as a meta-harness. It provides the generic agent session layer: custom agents in YAML, sub-agent tools, model/harness switching, policy gates, shared live sessions, a web UI, server/runner coordination, and event APIs. Harness4Visuals should still own the creative domain layer: provider payloads, generated asset records, user review semantics, ClickHouse rows, and Pioneer/Fastino training data.
+
+Recommended split:
+
+```mermaid
+flowchart LR
+  UI["Harness4Visuals remix UI"]
+  Omni["Omnigent session"]
+  Agent["H4V agent YAML"]
+  Tools["Gemini/Fal/Composio/OpenUI tools"]
+  Runtime["H4V runtime DB"]
+  Adapter["Omnigent event adapter"]
+  ETL["Taste ETL"]
+  CH["ClickHouse"]
+  SFT["Pioneer/Fastino JSONL"]
+
+  UI --> Omni
+  Omni --> Agent
+  Agent --> Tools
+  Tools --> Runtime
+  Omni --> Adapter
+  Runtime --> Adapter
+  Adapter --> ETL
+  ETL --> CH
+  ETL --> SFT
+```
+
+### Side-by-Side Impact
+
+| Area | Custom harness code | Omnigent-based code | Expected reduction |
+| --- | --- | --- | --- |
+| Session lifecycle | bespoke status, streaming, reconnect, cancel, sharing | Omnigent sessions and server/runner model | 50-75% |
+| Tool registration | custom router and schema plumbing | YAML function/MCP tools | 45-70% |
+| Sub-agent orchestration | hand-built supervisor and worker queues | YAML sub-agent tools with history passing and session caps | 60-80% |
+| Approvals and policy | custom approval queue and guardrails | Omnigent policies returning `ALLOW`, `DENY`, or `ASK` | 50-70% |
+| Generic web session UI | live session viewer built from scratch | Omnigent web UI and shared sessions | 60-90% |
+| Provider adapters | Gemini/Fal/Composio/OpenUI request code | still required as typed tools | 10-30% |
+| ETL, ClickHouse, Fastino/Pioneer | app-owned memory and training contract | unchanged after event normalization | 0-15% |
+
+The key is that Omnigent reduces repetitive harness mechanics, not the product-specific memory layer. The ETL pipeline should consume normalized chat history, not raw Omnigent internals.
+
+### Code Shape
+
+Without Omnigent, the backend tends to contain one large manager that owns the LLM turn, provider calls, approval queue, status fan-out, and persistence:
+
+```ts
+await events.appendUserTurn(sessionId, turn);
+const analysis = await gemini.analyzeReferences(assetIds);
+const prompt = await planner.buildPrompt(analysis, tasteProfile);
+const job = await fal.submitVideo(prompt);
+const asset = await fal.waitForResult(job.id);
+await approvals.require("instagram_publish", { assetId: asset.id });
+await composio.instagramPublish(asset.id, caption);
+await etl.enqueue(sessionId);
+```
+
+With Omnigent, generic orchestration moves into agent configuration and policies:
+
+```yaml
+name: h4v_creative_supervisor
+executor:
+  harness: openai-agents
+tools:
+  gemini_analyze_social_reference:
+    type: function
+    callable: h4v_tools.gemini.analyze_social_reference
+  fal_video_generate:
+    type: function
+    callable: h4v_tools.fal.generate_video
+  instagram_publish:
+    type: function
+    callable: h4v_tools.composio.instagram_publish
+policies:
+  instagram_approval:
+    type: function
+    handler: h4v_tools.policies.ask_before_instagram_publish
+```
+
+The provider tool functions still write `provider_jobs`, `assets`, `asset_reviews`, and `post_records`. Omnigent's session event stream is then normalized by `src/agent_taste_etl/omnigent.py`:
+
+```bash
+python -m agent_taste_etl.cli normalize-omnigent \
+  --input examples/omnigent_session_events.json \
+  --out out/omnigent/chat_history.json
+```
+
+That output feeds the existing pipeline:
+
+```bash
+python -m agent_taste_etl.cli run --input out/omnigent/chat_history.json --out out/omnigent/etl
+python -m agent_taste_etl.cli export-clickhouse --input out/omnigent/chat_history.json --out out/omnigent/clickhouse
+python -m agent_taste_etl.cli export-pioneer --input out/omnigent/chat_history.json --out out/omnigent/pioneer
+```
+
+See the full Omnigent integration guide at [docs/integrations/omnigent.md](./integrations/omnigent.md).
 
 ## Harness Manager
 
