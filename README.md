@@ -103,10 +103,12 @@ flowchart TD
 - Prompt records shaped for generation models.
 - JSONL records suitable for downstream small language model fine-tuning.
 - An evaluator that scores schema validity, provenance, precision, recall, F1, and hallucinated preference rate.
-- A `verify` command that runs the full test loop against golden data.
+- A `verify` command that runs ETL and checks configured thresholds against golden signals; unit tests are a separate command.
 - GitHub Actions CI that runs tests plus the verification loop.
 
 ## Quick Start
+
+The package declares Python >=3.11 and the `taste-etl` console entrypoint in [pyproject.toml](pyproject.toml). The commands below use the equivalent module entrypoint in [cli.py](src/agent_taste_etl/cli.py). Run them from the repository root: default inputs are relative example paths, and `verify` writes `out/verify` before checking thresholds. These are source-declared steps; successful execution and evaluation quality must be checked in the intended environment. See the [README change history](CHANGELOG/docs/readme.md).
 
 ```bash
 python -m pip install -e .
@@ -130,7 +132,9 @@ python -m agent_taste_etl.cli evaluate \
   --golden examples/golden_signals.jsonl
 ```
 
-Export provider-ready integration artifacts:
+Export local integration files for later import or training-job submission:
+
+The export writers in [integrations.py](src/agent_taste_etl/integrations.py) produce local files, including request JSON. Provider ingestion and training are separate steps; generating these files does not establish current API/model compatibility.
 
 ```bash
 python -m agent_taste_etl.cli export-clickhouse \
@@ -152,8 +156,8 @@ python -m agent_taste_etl.cli normalize-omnigent \
 | --- | --- | --- | --- |
 | `run` | `chat_history.json` | `signals.jsonl`, `taste_profile.json`, `prompts.jsonl`, `training.jsonl`, `manifest.json` | Produces the core memory and training artifacts. |
 | `evaluate` | `signals.jsonl`, `golden_signals.jsonl` | metrics JSON on stdout | Scores schema validity, provenance, precision, recall, F1, and hallucination rate. |
-| `verify` | fixture input and golden signals | full run output plus metrics | Runs the CI-grade proof loop. |
-| `export-clickhouse` | `chat_history.json` | ClickHouse JSONEachRow files | Loads analytical memory, prompt, and training rows. |
+| `verify` | fixture input and golden signals | full run output plus metrics | Runs ETL and enforces the configured evaluation thresholds. |
+| `export-clickhouse` | `chat_history.json` | ClickHouse JSONEachRow files | Writes analytical memory, prompt, and training rows for later import. |
 | `export-pioneer` | `chat_history.json` | decoder SFT JSONL and training-job request | Prepares Pioneer/Fastino fine-tuning artifacts. |
 | `normalize-omnigent` | Omnigent session events | `chat_history.json` | Converts generic harness events into the stable ETL input shape. |
 
